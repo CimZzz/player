@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.kd.player"
-        minSdkVersion 23
+        minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -14,10 +14,32 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
+    signingConfigs {
+        release {
+            storeFile file("../key/TCBSign.jks")
+            storePassword '58220918'
+            keyAlias 'TCBSign'
+            keyPassword '58220918'
+
+        }
+        debug {
+            storeFile file("../key/TCBSign.jks")
+            storePassword '58220918'
+            keyAlias 'TCBSign'
+            keyPassword '58220918'
+
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            signingConfig signingConfigs.debug
         }
     }
     sourceSets {
@@ -37,4 +59,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
     implementation files('jniLibs/fastjson-1.2.68.jar')
+    implementation project(path: ':transport')
 }

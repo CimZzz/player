@@ -1,5 +1,4 @@
-package com.kd.player;
-
+package com.virtualightning.transport;
 
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
