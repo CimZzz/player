@@ -208,8 +208,7 @@ public class CommunicationMasterServer {
                             } else {
                                 deviceBean = new DeviceBean();
                                 deviceBean.setId(deviceId);
-                                deviceBean.setHost(eventObj.getString("host"));
-                                deviceBean.setPort(eventObj.getIntValue("port"));
+                                deviceBean.initWithJSON(eventObj);
                                 deviceBean.setActivateTime(SystemClock.elapsedRealtime());
                                 deviceMap.put(deviceId, deviceBean);
                                 // 发送通知注册新设备

@@ -17,4 +17,7 @@ public final class TransportConstants {
     public static final String COM_TYPE_HERE = "here";
 
     public static final String KEY_UUID = "uuid";
+    public static final String KEY_SCREEN_WIDTH = "screenWidth";
+    public static final String KEY_SCREEN_HEIGHT = "screenHeight";
+    public static final String KEY_SCREEN_DPI = "dpi";
 }

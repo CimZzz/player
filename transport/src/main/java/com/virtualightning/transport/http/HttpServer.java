@@ -16,7 +16,7 @@ public class HttpServer {
     private final ResBundle resBundle;
 
     public HttpServer(String path, Readable readable, HttpCallback callback) {
-        this.httpCallback = callback;
+//        this.httpCallback = callback;
         resBundle = new ResBundle();
         resBundle.path = path;
         resBundle.readable = readable;
@@ -38,9 +38,9 @@ public class HttpServer {
     // 关闭 Http Server
     ///////////////////////////////////////////////////////////////////////////
     public void close() {
-        if(!isRunning) {
-            return;
-        }
+//        if(!isRunning) {
+//            return;
+//        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

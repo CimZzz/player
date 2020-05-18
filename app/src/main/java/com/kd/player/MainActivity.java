@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -182,7 +184,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void startCommunicationServer() {
         if(slaveServer == null) {
             CommunicationSlaveServer.ALLOW_LOG = false;
-            slaveServer = new CommunicationSlaveServer();
+            DisplayMetrics dm = getResources().getDisplayMetrics();
+            slaveServer = new CommunicationSlaveServer(dm.widthPixels, dm.heightPixels, dm.densityDpi);
             slaveServer.start();
         }
     }

@@ -23,10 +23,13 @@ public class CommunicationSlaveServer {
     private final String uuid;
     private final ResBundle resBundle;
 
-    public CommunicationSlaveServer() {
+    public CommunicationSlaveServer(int screenWidth, int screenHeight, float dpi) {
         this.uuid = "slave:" + UUID.randomUUID().toString();
         this.resBundle = new ResBundle();
         this.resBundle.uuid = uuid;
+        this.resBundle.screenWidth = screenWidth;
+        this.resBundle.screenHeight = screenHeight;
+        this.resBundle.dpi = dpi;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -67,6 +70,9 @@ public class CommunicationSlaveServer {
     private static class ResBundle {
         boolean isClose = false;
         String uuid;
+        int screenWidth;
+        int screenHeight;
+        float dpi;
         InetAddress multicastAddr;
         MulticastSocket socket;
         DatagramPacket recvPacket;
@@ -100,6 +106,9 @@ public class CommunicationSlaveServer {
             JSONObject object = new JSONObject();
             object.put("type", TransportConstants.COM_TYPE_HERE);
             object.put(TransportConstants.KEY_UUID, resBundle.uuid);
+            object.put(TransportConstants.KEY_SCREEN_WIDTH, resBundle.screenWidth);
+            object.put(TransportConstants.KEY_SCREEN_HEIGHT, resBundle.screenHeight);
+            object.put(TransportConstants.KEY_SCREEN_DPI, resBundle.dpi);
             byte[] buffer = object.toJSONString().getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             packet.setAddress(inetAddress != null ? inetAddress : resBundle.multicastAddr);
