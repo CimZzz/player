@@ -14,18 +14,22 @@ import java.net.Socket;
  * Project : taoke_android
  * Since Version : Alpha
  */
-public class ServerSocketThread<T> implements Runnable {
+public class ServerSocketThread implements Runnable {
     private final int serverPort;
-    private MessageLooper<ServerSocketThread<T>, SocketEvent> messageLooper;
+    private MessageLooper<ServerSocketThread, SocketEvent> messageLooper;
     private boolean isRunning = true;
     private ServerSocket serverSocket;
 
     public ServerSocketThread(int serverPort, SocketThreadFactory socketThreadFactory, SocketMessageCallback socketMessageCallback) {
         this.serverPort = serverPort;
-        messageLooper = new MessageLooper<>(this, new ServerMessageCallback<T>(socketThreadFactory, socketMessageCallback));
+        messageLooper = new MessageLooper<>(this, new ServerMessageCallback(socketThreadFactory, socketMessageCallback));
         messageLooper.setMessageRefuseCallback(new ServerRefuseCallback());
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/18 下午7:53
+    // 外部调用关闭方法
+    ///////////////////////////////////////////////////////////////////////////
     public void close() {
         synchronized (this) {
             isRunning = false;
@@ -41,6 +45,21 @@ public class ServerSocketThread<T> implements Runnable {
         messageLooper.closeUntilMessageHandleCompleted();
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/18 下午7:53
+    // 外部对 Socket 发送消息
+    ///////////////////////////////////////////////////////////////////////////
+    public void sendMessage(int socketId, Object data) {
+        messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Response, socketId, data));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/18 下午7:54
+    // 修改 SocketResources
+    ///////////////////////////////////////////////////////////////////////////
+    public void modifySocketResources(ModifyResourceCallback callback) {
+        messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Modify_Resource, callback));
+    }
 
     @Override
     public void run() {
@@ -70,17 +89,13 @@ public class ServerSocketThread<T> implements Runnable {
                 Socket socket = serverSocket.accept();
                 synchronized (this) {
                     if (!isRunning) {
-                        try {
-                            socket.close();
-                        } catch (Exception ignore) {
-                        }
+                        try { socket.close(); } catch (Exception ignore) { }
                         return;
                     }
                 }
-//                messageLooper.sendMessage(socket);
-            } catch (Exception ignore) {
-            }
+            } catch (Exception ignore) { try { Thread.sleep(1); } catch (Exception ignore2) { }}
         }
+        close();
     }
 
 
@@ -89,7 +104,7 @@ public class ServerSocketThread<T> implements Runnable {
     // Socket 回调方法
     ///////////////////////////////////////////////////////////////////////////
     public interface SocketMessageCallback {
-        void onEvent(int type, Object dataObj);
+        void onEvent(int socketId, int type, Object dataObj);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -138,7 +153,7 @@ public class ServerSocketThread<T> implements Runnable {
     // Add by CimZzz on 2020/5/18 下午5:19
     // Socket 消息处理回调
     ///////////////////////////////////////////////////////////////////////////
-    private static class ServerMessageCallback<T> implements MessageLooper.MessageCallback<ServerSocketThread<T>, SocketEvent> {
+    private static class ServerMessageCallback implements MessageLooper.MessageCallback<ServerSocketThread, SocketEvent> {
         private final SocketThreadFactory socketThreadFactory;
         private final SocketMessageCallback socketMessageCallback;
 
@@ -152,7 +167,7 @@ public class ServerSocketThread<T> implements Runnable {
         }
 
         @Override
-        public void handleMessage(ServerSocketThread<T> dataObj, SocketEvent message) throws Exception {
+        public void handleMessage(ServerSocketThread serverSocketThread, SocketEvent message) throws Exception {
             switch (message.getEventType()) {
                 case SocketEvent.Type_Close: {
                     int length = socketThreadArr.size();
@@ -177,8 +192,11 @@ public class ServerSocketThread<T> implements Runnable {
                     Socket socket = (Socket) message.getEventData();
                     if(socket != null) {
                         int idCode = socketCode ++;
+                        if(socketCode == Integer.MAX_VALUE) {
+                            socketCode = 0;
+                        }
                         SocketThread socketThread = socketThreadFactory.generateSocketThread(idCode, socket);
-                        socketThread.setParentMessageLooper(dataObj.messageLooper);
+                        socketThread.setParentMessageLooper(serverSocketThread.messageLooper);
                         socketThreadArr.put(idCode, socketThread);
                         new Thread(socketThread).start();
                     }
@@ -200,11 +218,21 @@ public class ServerSocketThread<T> implements Runnable {
                     break;
                 }
 
-                case SocketEvent.Type_Send_Response: {
-                    if(socketMessageCallback != null) {
-                        socketMessageCallback.onEvent((Integer) message.getEventData(), message.getOtherData());
+                case SocketEvent.Type_Send: {
+                    Object[] eventData = (Object[]) message.getEventData();
+                    if(eventData != null && eventData.length == 3) {
+                        if (socketMessageCallback != null) {
+                            socketMessageCallback.onEvent((int)eventData[0], (int) eventData[1], eventData[2]);
+                        }
                     }
                     break;
+                }
+
+                case SocketEvent.Type_Response: {
+                    SocketThread socketThread = socketThreadArr.get((Integer) message.getEventData());
+                    if(socketThread != null) {
+                        socketThread.receiveMessage(message.getOtherData());
+                    }
                 }
             }
         }

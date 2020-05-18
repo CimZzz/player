@@ -50,9 +50,17 @@ public abstract class SocketThread implements Runnable {
     @Override
     public final void run() {
         while (isRunning) {
-            try { onRun(); } catch (Exception e) { }
+            try { onRun(); } catch (Exception ignore) { }
         }
         close();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/18 下午7:50
+    // 处理收到消息
+    ///////////////////////////////////////////////////////////////////////////
+    public void receiveMessage(Object data) {
+
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -75,6 +83,7 @@ public abstract class SocketThread implements Runnable {
     // 抛出异常不会中断 Looper
     ///////////////////////////////////////////////////////////////////////////
     protected abstract void onRun() throws Exception;
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Add by CimZzz on 2020/5/18 下午7:18
@@ -148,10 +157,10 @@ public abstract class SocketThread implements Runnable {
     // Add by CimZzz on 2020/5/18 下午7:40
     // 发送响应
     ///////////////////////////////////////////////////////////////////////////
-    protected void sendResponse(int type, Object data) {
+    protected final void sendResponse(int type, Object data) {
         MessageLooper<?, SocketEvent> messageLooper = parentMessageLooper.get();
         if(messageLooper != null) {
-            messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Send, type, data));
+            messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Send, new Object[]{idCode, type, data}));
         }
     }
 

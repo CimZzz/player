@@ -1,6 +1,7 @@
 package com.virtualightning.transport.http;
 
 import com.virtualightning.transport.MessageLooper;
+import com.virtualightning.transport.serversocket.ServerSocketThread;
 
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -12,5 +13,10 @@ import java.net.ServerSocket;
  * Since Version : Alpha
  */
 public class HttpServer {
+    private ServerSocketThread serverSocketThread;
 
+
+    public void start() {
+
+    }
 }
