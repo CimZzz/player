@@ -9,8 +9,10 @@ public class MessageLooper<T, E> implements Runnable  {
     private final WeakReference<T> baseObj;
     private final ConcurrentLinkedQueue<E> messageQueue;
     private final MessageCallback<T, E> callback;
+    private MessageRefuseCallback<E> messageRefuseCallback;
     private final Object locker = new Object();
     private boolean isRunning = true;
+    private boolean isCloseUntilCompleted = false;
 
     private List<TickRunnable<T, E>> tickRunnableList = new LinkedList<>();
     private List<ProduceRunnable<E>> produceRunnableList = new LinkedList<>();
@@ -24,11 +26,18 @@ public class MessageLooper<T, E> implements Runnable  {
     public void sendMessage(E message) {
         synchronized (locker) {
             if(!isRunning) {
+                if(messageRefuseCallback != null) {
+                    try { messageRefuseCallback.refuseMessage(message); } catch (Exception ignore) { }
+                }
                 return;
             }
             messageQueue.add(message);
             locker.notifyAll();
         }
+    }
+
+    public void setMessageRefuseCallback(MessageRefuseCallback<E> messageRefuseCallback) {
+        this.messageRefuseCallback = messageRefuseCallback;
     }
 
     public Runnable beginTick(long periodTime, MessageTickCallback<E> tickCallback) {
@@ -80,9 +89,25 @@ public class MessageLooper<T, E> implements Runnable  {
         messageQueue.clear();
     }
 
+    public void closeUntilMessageHandleCompleted() {
+        synchronized (locker) {
+            isCloseUntilCompleted = true;
+            isRunning = false;
+            for(TickRunnable<T, E> runnable : tickRunnableList) {
+                runnable.close();
+            }
+            for(ProduceRunnable<E> runnable : produceRunnableList) {
+                runnable.close();
+            }
+            tickRunnableList.clear();
+            locker.notifyAll();
+        }
+    }
+
     public void close() {
         messageQueue.clear();
         synchronized (locker) {
+            isCloseUntilCompleted = false;
             isRunning = false;
             for(TickRunnable<T, E> runnable : tickRunnableList) {
                 runnable.close();
@@ -98,7 +123,7 @@ public class MessageLooper<T, E> implements Runnable  {
     @Override
     public void run() {
         while(isRunning) {
-            while(isRunning && !messageQueue.isEmpty()) {
+            while((isRunning || !isCloseUntilCompleted) && !messageQueue.isEmpty()) {
                 final E message = messageQueue.poll();
                 final T dataObj = baseObj.get();
                 if (dataObj == null) {
@@ -133,6 +158,10 @@ public class MessageLooper<T, E> implements Runnable  {
 
     public interface MessageCloseableTickCallback<E> {
         E generateTickMessage(TickCloser closer);
+    }
+
+    public interface MessageRefuseCallback<E> {
+        void refuseMessage(E message) throws Exception;
     }
 
     private static class TickRunnable<T, E> implements Runnable {
