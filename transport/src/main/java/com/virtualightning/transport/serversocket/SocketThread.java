@@ -37,6 +37,7 @@ public abstract class SocketThread implements Runnable {
             isRunning = false;
             isLooperRunning = false;
         }
+        onClose();
         MessageLooper<?, SocketEvent> messageLooper = parentMessageLooper.get();
         if(messageLooper != null) {
             messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Socket_Close, idCode));
@@ -46,7 +47,6 @@ public abstract class SocketThread implements Runnable {
             try { socket.close(); } catch (Exception ignore) { }
             socket = null;
         }
-        onClose();
     }
 
     @Override
@@ -88,7 +88,10 @@ public abstract class SocketThread implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
     protected abstract void onClose();
 
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/19 下午2:08
+    // 初始化回调
+    ///////////////////////////////////////////////////////////////////////////
     protected abstract void onInit() throws Exception;
 
     ///////////////////////////////////////////////////////////////////////////

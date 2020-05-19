@@ -20,9 +20,9 @@ public class ServerSocketThread implements Runnable {
     private boolean isRunning = true;
     private ServerSocket serverSocket;
 
-    public ServerSocketThread(int serverPort, SocketThreadFactory socketThreadFactory, SocketMessageCallback socketMessageCallback) {
+    public ServerSocketThread(int serverPort, boolean isOnlySocket, SocketThreadFactory socketThreadFactory, SocketMessageCallback socketMessageCallback) {
         this.serverPort = serverPort;
-        messageLooper = new MessageLooper<>(this, new ServerMessageCallback(socketThreadFactory, socketMessageCallback));
+        messageLooper = new MessageLooper<>(this, new ServerMessageCallback(isOnlySocket, socketThreadFactory, socketMessageCallback));
         messageLooper.setMessageRefuseCallback(new ServerRefuseCallback());
     }
 
@@ -92,6 +92,7 @@ public class ServerSocketThread implements Runnable {
                         try { socket.close(); } catch (Exception ignore) { }
                         return;
                     }
+                    messageLooper.sendMessage(new SocketEvent(SocketEvent.Type_Socket, socket));
                 }
             } catch (Exception ignore) { try { Thread.sleep(1); } catch (Exception ignore2) { }}
         }
@@ -154,6 +155,7 @@ public class ServerSocketThread implements Runnable {
     // Socket 消息处理回调
     ///////////////////////////////////////////////////////////////////////////
     private static class ServerMessageCallback implements MessageLooper.MessageCallback<ServerSocketThread, SocketEvent> {
+        private final boolean isOnlySocket;
         private final SocketThreadFactory socketThreadFactory;
         private final SocketMessageCallback socketMessageCallback;
 
@@ -161,7 +163,8 @@ public class ServerSocketThread implements Runnable {
         private SocketResources socketResources = new SocketResources();
         private int socketCode = 0;
 
-        public ServerMessageCallback(SocketThreadFactory socketThreadFactory, SocketMessageCallback socketMessageCallback) {
+        public ServerMessageCallback(boolean isOnlySocket, SocketThreadFactory socketThreadFactory, SocketMessageCallback socketMessageCallback) {
+            this.isOnlySocket = isOnlySocket;
             this.socketThreadFactory = socketThreadFactory;
             this.socketMessageCallback = socketMessageCallback;
         }
@@ -191,6 +194,10 @@ public class ServerSocketThread implements Runnable {
                 case SocketEvent.Type_Socket: {
                     Socket socket = (Socket) message.getEventData();
                     if(socket != null) {
+                        if(isOnlySocket && socketThreadArr.size() >= 1) {
+                            try { socket.close(); } catch (Exception ignore) { }
+                            break;
+                        }
                         int idCode = socketCode ++;
                         if(socketCode == Integer.MAX_VALUE) {
                             socketCode = 0;

@@ -242,7 +242,7 @@ public class CommunicationMasterServer {
             }
             bundle.socket.receive(bundle.recvPacket);
             JSONObject object = JSONObject.parseObject(new String(bundle.recvPacket.getData(), 0, bundle.recvPacket.getLength()));
-            object.put("host", bundle.recvPacket.getAddress().getHostName());
+            object.put("host", bundle.recvPacket.getAddress().getHostAddress());
             object.put("port", bundle.recvPacket.getPort());
             return new CommunicationEvent(CommunicationEvent.Type_Receive, object);
         }

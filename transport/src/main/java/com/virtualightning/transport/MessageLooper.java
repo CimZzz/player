@@ -494,9 +494,7 @@ public class MessageLooper<T, E> implements Runnable  {
                         }
                     }
                 }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
+                catch (Exception e) { }
             }
         }
     }

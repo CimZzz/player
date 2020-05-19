@@ -9,12 +9,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.kd.player.utils.NetUtils;
 import com.virtualightning.transport.communication.CommunicationSlaveServer;
 import com.virtualightning.transport.control.ControlEvent;
 import com.virtualightning.transport.control.ControlServer;
