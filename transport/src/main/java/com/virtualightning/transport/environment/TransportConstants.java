@@ -10,6 +10,7 @@ public final class TransportConstants {
     public static final String Multicast_Addr = "239.240.241.242";
     public static final int Multicast_Port = 1911;
     public static final int Control_Port = 1912;
+    public static final int Resource_Port = 1913;
 
     public static final long Device_Expire_Time = 10000L;
 

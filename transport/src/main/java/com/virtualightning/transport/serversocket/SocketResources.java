@@ -18,4 +18,8 @@ public class SocketResources {
     public Object get(String key) {
         return resourcesMap.get(key);
     }
+
+    public void remove(String key) {
+        resourcesMap.remove(key);
+    }
 }

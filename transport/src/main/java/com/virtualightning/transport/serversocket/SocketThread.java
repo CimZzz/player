@@ -18,6 +18,7 @@ public abstract class SocketThread implements Runnable {
     private WeakReference<MessageLooper<?, SocketEvent>> parentMessageLooper;
 
     private boolean isRunning = true;
+    private boolean isLooperRunning = true;
 
     public SocketThread(int idCode, Socket socket) {
         this.socket = socket;
@@ -28,12 +29,13 @@ public abstract class SocketThread implements Runnable {
         this.parentMessageLooper = new WeakReference<MessageLooper<?, SocketEvent>>(parentMessageLooper);
     }
 
-    void close() {
+    public void close() {
         synchronized (this) {
             if(!isRunning) {
                 return;
             }
             isRunning = false;
+            isLooperRunning = false;
         }
         MessageLooper<?, SocketEvent> messageLooper = parentMessageLooper.get();
         if(messageLooper != null) {
@@ -49,10 +51,19 @@ public abstract class SocketThread implements Runnable {
 
     @Override
     public final void run() {
-        while (isRunning) {
-            try { onRun(); } catch (Exception ignore) { }
+        boolean isInit = true;
+        try { onInit(); } catch (Exception ignore) { isInit = false; }
+        if(isInit) {
+            while (isLooperRunning && isRunning) {
+                try { onRun(); } catch (Exception ignore) { }
+            }
         }
         close();
+    }
+
+
+    protected final void markLooperEnd() {
+        isLooperRunning = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -76,6 +87,9 @@ public abstract class SocketThread implements Runnable {
     // 处理额外关闭逻辑
     ///////////////////////////////////////////////////////////////////////////
     protected abstract void onClose();
+
+
+    protected abstract void onInit() throws Exception;
 
     ///////////////////////////////////////////////////////////////////////////
     // Add by CimZzz on 2020/5/18 下午7:17
