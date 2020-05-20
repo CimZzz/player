@@ -23,6 +23,10 @@ public class MessageLooper<T, E> implements Runnable  {
         this.callback = callback;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:24
+    // 发送消息给 MessageLooper
+    ///////////////////////////////////////////////////////////////////////////
     public void sendMessage(E message) {
         synchronized (locker) {
             if(!isRunning) {
@@ -36,10 +40,18 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:24
+    // 设置拒绝消息回调
+    ///////////////////////////////////////////////////////////////////////////
     public void setMessageRefuseCallback(MessageRefuseCallback<E> messageRefuseCallback) {
         this.messageRefuseCallback = messageRefuseCallback;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:24
+    // 启动周期定时器
+    ///////////////////////////////////////////////////////////////////////////
     public Runnable beginTick(long periodTime, MessageTickCallback<E> tickCallback) {
         if(!isRunning) {
             return null;
@@ -49,6 +61,10 @@ public class MessageLooper<T, E> implements Runnable  {
         return tickRunnable;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:24
+    // 启动延迟定时器，只执行一次
+    ///////////////////////////////////////////////////////////////////////////
     public Runnable beginDelay(long periodTime, MessageTickCallback<E> tickCallback) {
         if(!isRunning) {
             return null;
@@ -58,6 +74,10 @@ public class MessageLooper<T, E> implements Runnable  {
         return tickRunnable;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:25
+    // 启动可关闭的周期定时器
+    ///////////////////////////////////////////////////////////////////////////
     public Runnable beginCloseableTick(long periodTime, MessageCloseableTickCallback<E> tickCallback) {
         if(!isRunning) {
             return null;
@@ -67,6 +87,10 @@ public class MessageLooper<T, E> implements Runnable  {
         return tickRunnable;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:25
+    // 启动消息生产者
+    ///////////////////////////////////////////////////////////////////////////
     public Runnable beginProduce(ProduceChain<?, E> chain) {
         if(!isRunning) {
             return null;
@@ -76,6 +100,10 @@ public class MessageLooper<T, E> implements Runnable  {
         return produceRunnable;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:25
+    // 启动消息列表生产者，会以 List 的信息返回消息，并依次解决
+    ///////////////////////////////////////////////////////////////////////////
     public Runnable beginProduce(ListProduceChain<?, E> chain) {
         if(!isRunning) {
             return null;
@@ -85,10 +113,18 @@ public class MessageLooper<T, E> implements Runnable  {
         return produceRunnable;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:26
+    // 清空目前全部未执行消息
+    ///////////////////////////////////////////////////////////////////////////
     public void clear() {
         messageQueue.clear();
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:26
+    // 关闭 MessageLooper，不再接受消息，但是会继续执行完剩余全部待处理的消息
+    ///////////////////////////////////////////////////////////////////////////
     public void closeUntilMessageHandleCompleted() {
         synchronized (locker) {
             isCloseUntilCompleted = true;
@@ -104,6 +140,10 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:27
+    // 关闭 MessageLooper，不会继续执行剩余消息
+    ///////////////////////////////////////////////////////////////////////////
     public void close() {
         messageQueue.clear();
         synchronized (locker) {
@@ -120,6 +160,10 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:27
+    // MessageLooper 执行回调
+    ///////////////////////////////////////////////////////////////////////////
     @Override
     public void run() {
         while(isRunning) {
@@ -148,22 +192,42 @@ public class MessageLooper<T, E> implements Runnable  {
 
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:27
+    // MessageLooper 消息回调
+    ///////////////////////////////////////////////////////////////////////////
     public interface MessageCallback<T, E> {
         void handleMessage(T dataObj, E message) throws Exception;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:28
+    // MessageLooper 定时器执行回调
+    ///////////////////////////////////////////////////////////////////////////
     public interface MessageTickCallback<E> {
         E generateTickMessage();
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:28
+    // MessageLooper 可关闭定时器执行回调
+    ///////////////////////////////////////////////////////////////////////////
     public interface MessageCloseableTickCallback<E> {
         E generateTickMessage(TickCloser closer);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:28
+    // MessageLooper 拒绝消息回调
+    ///////////////////////////////////////////////////////////////////////////
     public interface MessageRefuseCallback<E> {
         void refuseMessage(E message) throws Exception;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:28
+    // 定时器方法循环
+    ///////////////////////////////////////////////////////////////////////////
     private static class TickRunnable<T, E> implements Runnable {
         final WeakReference<MessageLooper<T, E>> messageLooperRef;
         final MessageTickCallback<E> tickCallback;
@@ -213,6 +277,10 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:29
+    // 延时定时器方法循环
+    ///////////////////////////////////////////////////////////////////////////
     private static class DelayRunnable<T, E> extends TickRunnable<T, E> {
         private DelayRunnable(MessageLooper<T, E> messageLooper, MessageTickCallback<E> tickCallback, long periodTime) {
             super(messageLooper, tickCallback, periodTime);
@@ -252,6 +320,10 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:29
+    // 定时器关闭器
+    ///////////////////////////////////////////////////////////////////////////
     public static class TickCloser {
         private boolean isClosed;
 
@@ -264,6 +336,10 @@ public class MessageLooper<T, E> implements Runnable  {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Add by CimZzz on 2020/5/20 上午11:29
+    // 可关闭定时器关闭回调
+    ///////////////////////////////////////////////////////////////////////////
     private static class CloseableTickRunnable<T, E> extends TickRunnable<T, E> {
         private final MessageCloseableTickCallback<E> tickCallback;
         private final TickCloser tickCloser = new TickCloser();
@@ -409,7 +485,7 @@ public class MessageLooper<T, E> implements Runnable  {
     private static class ListChildProduceChain<A, B, C> extends ListProduceChain<A, B> {
         private final ListChildProduceCallback<A, B, C> callback;
         private final ProduceChain<?, C> parentChain;
-        public ListChildProduceChain(A dataObject, ProduceChain<?, C> parentChain, ListChildProduceCallback<A, B, C> callback) {
+        ListChildProduceChain(A dataObject, ProduceChain<?, C> parentChain, ListChildProduceCallback<A, B, C> callback) {
             super(dataObject, null);
             this.parentChain = parentChain;
             this.callback = callback;
@@ -494,7 +570,7 @@ public class MessageLooper<T, E> implements Runnable  {
                         }
                     }
                 }
-                catch (Exception e) { }
+                catch (Exception ignore) { }
             }
         }
     }
